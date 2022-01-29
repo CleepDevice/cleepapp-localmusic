@@ -1,0 +1,18 @@
+.dialog-content {
+    min-height: 450px;
+}
+
+.track-list {
+    min-width: 400px;
+    margin-left: 10px;
+    margin-right: 10px;
+}
+
+.list-subheader div.md-subheader-inner {
+    padding: 0px 16px 0px 16px;
+}
+
+.list-subheader {
+    background-color: inherit;
+}
+

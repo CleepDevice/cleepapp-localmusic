@@ -1,0 +1,66 @@
+<div layout="column" layout-padding ng-cloak>
+
+    <md-list ng-cloak>
+
+        <md-subheader class="md-no-sticky">Local music files</md-subheader>
+        <md-list-item>
+            <p></p>
+            <md-input-container md-no-float class="md-secondary no-margin">
+                <div upload-file selected-file="localmusicCtl.uploadFile" label="Add music file"></div>
+            </md-input-container>
+        </md-list-item>
+        <md-list-item ng-repeat="file in localmusicCtl.files">
+            <md-icon md-svg-icon="music-circle-outline"></md-icon>
+            <p>{{file.filename}}</p>
+            <md-button class="md-secondary md-raised md-primary" ng-click="localmusicCtl.deleteMusicFile(file.filename)">
+                <md-icon md-svg-icon="delete"></md-icon>
+                <md-tooltip>Delete music file</md-tooltip>
+            </md-button>
+        </md-list-item>
+        <md-list-item ng-if="!localmusicCtl.files.length">
+            <md-icon md-svg-icon="chevron-right"></md-icon>
+            <p>No music file uploaded to device</p>
+        </md-list-item>
+
+        <md-subheader class="md-no-sticky">Playlists</md-subheader>
+        <md-list-item>
+            <md-icon md-svg-icon="alert" ng-if="!localmusicCtl.config.default" class="md-accent"></md-icon>
+            <p>
+                <span ng-if="!localmusicCtl.config.default" class="md-accent">No playlist selected, no music can be played</span>
+            </p>
+            <md-button class="md-secondary md-raised md-primary" ng-click="localmusicCtl.playlistDialog()" ng-disabled="!localmusicCtl.files.length">
+                <md-icon md-svg-icon="playlist-plus"></md-icon>
+                Create new playlist
+            </md-button>
+        </md-list-item>
+        <md-list-item ng-repeat="(name, files) in localmusicCtl.config.playlists">
+            <md-icon md-svg-icon="playlist-music-outline" ng-if="localmusicCtl.config.default !== name"></md-icon>
+            <md-icon md-svg-icon="playlist-star" class="md-accent" ng-if="localmusicCtl.config.default === name">
+                <md-tooltip>Default playlist</md-tooltip>
+            </md-icon>
+            <p>
+                {{name}}
+                <span class="md-caption">({{files.length}} tracks)</span>
+            </p>
+            <md-button class="md-secondary md-raised md-primary" ng-click="localmusicCtl.deletePlaylist(name)">
+                <md-icon md-svg-icon="delete"></md-icon>
+                <md-tooltip>Delete playlist</md-tooltip>
+            </md-button>
+            <md-button class="md-secondary md-raised md-primary" ng-click="localmusicCtl.playlistDialog(name, files)">
+                <md-icon md-svg-icon="playlist-edit"></md-icon>
+                <md-tooltip>Edit playlist</md-tooltip>
+            </md-button>
+            <md-button class="md-secondary md-raised md-primary" ng-click="localmusicCtl.setDefaultPlaylist(name)">
+                <md-icon md-svg-icon="playlist-star"></md-icon>
+                <md-tooltip>Set playlist as default</md-tooltip>
+            </md-button>
+        </md-list-item>
+        <md-list-item ng-if="!localmusicCtl.hasPlaylists">
+            <md-icon md-svg-icon="chevron-right"></md-icon>
+            <p>No playlist</p>
+        </md-list-item>
+
+    </md-list>
+
+</div>
+    

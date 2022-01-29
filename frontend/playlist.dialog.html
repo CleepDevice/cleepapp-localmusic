@@ -1,0 +1,68 @@
+<md-dialog aria-label="Add sensor dialog" flex="75">
+    <form ng-cloak>
+        <md-toolbar>
+            <div class="md-toolbar-tools">
+                <h2>Playlist</h2>
+                <span flex></span>
+                <md-button class="md-icon-button" ng-click="localmusicCtl.cancelDialog()" aria-label="Close dialog">
+                    <md-icon md-svg-icon="close"></md-icon>
+                </md-button>
+            </div>
+        </md-toolbar>
+
+        <md-dialog-content class="md-dialog-content dialog-content" layout="column" layout-align="start stretch">
+            <div>
+                <md-list>
+                    <md-list-item>
+                        <md-icon md-svg-icon="chevron-right"></md-icon>
+                        <p>Playlist name</p>
+                        <md-input-container class="md-secondary no-margin no-error-spacer">
+                            <input type="text" ng-model="localmusicCtl.playlistName">
+                        </md-input-container>
+                    </md-list-item>
+                </md-list>
+                <md-list>
+                    <md-list-item>
+                        <md-icon md-svg-icon="chevron-right"></md-icon>
+                        <p>Playlist tracks</p>
+                    </md-list-item>
+                </md-list>
+            </div>
+            <div layout="row" layout-align="center stretch">
+                <md-list class="track-list md-whiteframe-4dp">
+                    <md-subheader class="list-subheader">
+                        <p>Availables files</p>
+                    </md-subheader>
+                    <md-list-item ng-repeat="file in localmusicCtl.availableFiles" ng-click="localmusicCtl.moveRight(file)">
+                        <p>{{file.filename}}</p>
+                        <md-button class="md-primary md-icon-button" ng-click="localmusicCtl.moveRight(file)">
+                            <md-icon md-svg-icon="arrow-right-bold"></md-icon>
+                        </md-button>
+                    </md-list-item>
+                </md-list>
+                <md-list class="track-list md-whiteframe-4dp">
+                    <md-subheader class="list-subheader">
+                        <p>Playlist files</p>
+                    </md-subheader>
+                    <md-list-item ng-repeat="track in localmusicCtl.playlistTracks" ng-click="localmusicCtl.moveLeft(track)">
+                        <md-button class="md-primary md-icon-button" ng-click="localmusicCtl.moveLeft(track)">
+                            <md-icon md-svg-icon="arrow-left-bold"></md-icon>
+                        </md-button>
+                        <p>{{track.filename}}</p>
+                    </md-list-item>
+                </md-list>
+            </div>
+        </md-dialog-content>
+
+        <md-dialog-actions layout="row">
+            <md-button ng-click="localmusicCtl.addPlaylist()" ng-if="!localmusicCtl.playlistUpdate">
+                <md-icon md-svg-icon="content-save"></md-icon>
+                Create playlist
+            </md-button>
+            <md-button ng-click="localmusicCtl.updatePlaylist()" ng-if="localmusicCtl.playlistUpdate">
+                <md-icon md-svg-icon="content-save"></md-icon>
+                Update playlist
+            </md-button>
+        </md-dialog-actions>
+    </form>
+</md-dialog>

@@ -1,0 +1,14 @@
+{
+    "icon": "folder-music-outline",
+    "global": {
+        "js": ["localmusic.service.js"],
+        "html": [],
+        "css": []
+    },
+    "config": {
+        "js": ["localmusic.config.js"],
+        "html": ["localmusic.config.html", "playlist.dialog.html"],
+        "css": ["localmusic.css"]
+    }
+}
+    

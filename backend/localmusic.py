@@ -14,7 +14,7 @@ class Localmusic(CleepRenderer):
     """
 
     MODULE_AUTHOR = "Cleep"
-    MODULE_VERSION = "2.0.0"
+    MODULE_VERSION = "1.0.0"
     MODULE_LABEL = "Local music"
     MODULE_DEPS = ["audioplayer"]
     MODULE_DESCRIPTION = "Create your music playlist with device files"
@@ -98,7 +98,7 @@ class Localmusic(CleepRenderer):
         """
         musics = []
 
-        for root, _, files in os.walk(self.MODULE_STORAGE_PATH):
+        for root, _, files in os.walk(self.APP_STORAGE_PATH):
             for filename in files:
                 musics.append(
                     {"filename": filename, "path": os.path.join(root, filename)}
@@ -170,7 +170,7 @@ class Localmusic(CleepRenderer):
             )
 
         filename = os.path.basename(filepath)
-        new_path = os.path.join(self.MODULE_STORAGE_PATH, filename)
+        new_path = os.path.join(self.APP_STORAGE_PATH, filename)
         if os.path.exists(new_path):
             raise CommandError(f'Music file "{filename}" already exists')
         if not self.cleep_filesystem.move(filepath, new_path):
@@ -190,7 +190,7 @@ class Localmusic(CleepRenderer):
         Raises:
             CommandError: if file deletion failed
         """
-        for root, _, files in os.walk(self.MODULE_STORAGE_PATH):
+        for root, _, files in os.walk(self.APP_STORAGE_PATH):
             for filename_ in files:
                 filepath = os.path.join(root, filename_)
                 if filename_ == filename:

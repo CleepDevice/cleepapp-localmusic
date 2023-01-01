@@ -51,4 +51,10 @@ function($rootScope, rpcService) {
         });
     };
 
+    self.playPlaylist = function(playlistName) {
+        return rpcService.sendCommand('play_playlist', 'localmusic', {
+            playlist_name: playlistName,
+        });
+    };
+
 }]);

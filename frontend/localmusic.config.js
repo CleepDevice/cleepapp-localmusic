@@ -11,6 +11,7 @@ function($rootScope, cleepService, toastService, localmusicService, $mdDialog) {
     var localmusicConfigController = function($scope) {
         var self = this;
         self.config = {};
+        self.tabIndex = 'playlists';
         self.hasPlaylists = false;
         self.uploadFile = null;
         self.files = [];
@@ -83,14 +84,14 @@ function($rootScope, cleepService, toastService, localmusicService, $mdDialog) {
         self.moveRight = function(file) {
             self.playlistTracks.push(file);
             self.availableFiles.splice(self.availableFiles.indexOf(file), 1);
-            self.playlistTracks.sort(self._sortFiles);
+            // self.playlistTracks.sort(self._sortFiles);
             self.availableFiles.sort(self._sortFiles);
         };
 
         self.moveLeft = function(track) {
             self.availableFiles.push(track);
             self.playlistTracks.splice(self.playlistTracks.indexOf(track), 1);
-            self.playlistTracks.sort(self._sortFiles);
+            // self.playlistTracks.sort(self._sortFiles);
             self.availableFiles.sort(self._sortFiles);
         };
 
@@ -144,6 +145,15 @@ function($rootScope, cleepService, toastService, localmusicService, $mdDialog) {
                     if (!resp.error) {
                         toastService.success('Default playlist saved');
                         cleepService.reloadModuleConfig('localmusic');
+                    }
+                });
+        };
+
+        self.playPlaylist = function(playlistName) {
+            localmusicService.playPlaylist(playlistName)
+                .then((resp) => {
+                    if (resp.error) {
+                        toastService.error('Error occured starting playback');
                     }
                 });
         };

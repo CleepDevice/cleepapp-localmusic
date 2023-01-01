@@ -49,7 +49,6 @@ class Localmusic(CleepRenderer):
         """
         CleepRenderer.__init__(self, bootstrap, debug_enabled)
 
-        self.audioplayer_uuid = None
         self.has_audioplayer = False
         # music files
         # [
@@ -60,6 +59,13 @@ class Localmusic(CleepRenderer):
         #   ...
         # ]
         self.files = []
+        self.playback = {
+            "playeruuid": None,
+            "index": None,
+            "playlistname": None,
+        }
+
+        self.playback_update_event = self._get_event('audioplayer.playback.update')
 
     def _configure(self):
         """
@@ -74,7 +80,24 @@ class Localmusic(CleepRenderer):
         """
         self.has_audioplayer = self.is_module_loaded("audioplayer")
 
-        self._create_audio_player()
+    def on_event(self, event):
+        """
+        Event received
+
+        Args:
+            event (MessageRequest): event data
+        """
+        if event["event"] == "audioplayer.playback.update":
+            if event["params"]["playeruuid"] != self.playback["playeruuid"]:
+                return
+
+            if event["params"]["state"] == "stopped":
+                # player stopped, delete its reference
+                self.playback["playeruuid"] = None
+
+            if event["params"]["state"] == "playing":
+                # store current index
+                self.playback["index"] = event["params"]["index"]
 
     def on_render(self, profile_name, profile_values):
         """
@@ -84,13 +107,15 @@ class Localmusic(CleepRenderer):
             profile_name (str): rendered profile name
             profile_values (dict): renderer profile values
         """
+        if profile_name == "AlarmProfile" and profile_values["status"] == AlarmProfile.STATUS_TRIGGERED:
+            self._start_alarm(profile_values["volume"], profile_values["repeat"], profile_values["shuffle"])
+
         if profile_name == "AlarmProfile" and profile_values["status"] in [
-            AlarmProfile.STATUS_TRIGGERED,
             AlarmProfile.STATUS_STOPPED,
             AlarmProfile.STATUS_SNOOZED,
         ]:
-            play = profile_values["status"] == AlarmProfile.STATUS_TRIGGERED
-            self._render_alarm(play, profile_values["volume"])
+            snoozed = profile_values["status"] == AlarmProfile.STATUS_SNOOZED
+            self._stop_alarm(snoozed)
 
     def _refresh_music_files(self):
         """
@@ -145,9 +170,34 @@ class Localmusic(CleepRenderer):
         Get all music files stored in device
 
         Returns:
-            dict: TODO
+            list: list of files::
+
+                [
+                    {
+                        filename (str): filename,
+                        path (str): path
+                    },
+                    ...
+                ]
+
         """
         return self.files
+
+    def get_playback(self):
+        """
+        Return playback
+
+        Returns:
+            dict: current playback information::
+
+                {
+                    playeruuid (str): player uuid if running. None if not running
+                    playlistname (str): current played playlist. None if no playlist played
+                    index (number): current played playlist track. None if no playlist played
+                }
+
+        """
+        return self.playback
 
     def add_music_file(self, filepath):
         """
@@ -233,6 +283,10 @@ class Localmusic(CleepRenderer):
         self._check_playlists(playlists)
         self._set_config_field("playlists", playlists)
 
+        if len(playlists) == 0:
+            # set unique playlist as default one
+            self.set_default_playlist(playlist_name)
+
     def update_playlist(self, playlist_name, new_playlist_name, files):
         """
         Update playlist content
@@ -306,29 +360,39 @@ class Localmusic(CleepRenderer):
 
         self._set_config_field("default", playlist_name)
 
-        self._create_audio_player()
+    def play_playlist(self, playlist_name):
+        """
+        Start playback on specified playlist
 
-    def _create_audio_player(self):
+        Args:
+            playlist_name (str): playlist name
         """
-        Create audio player on audioplayer application
+        playlists = self._get_config_field("playlists")
+        if playlist_name not in playlists:
+            raise InvalidParameter(f'Playlist "{playlist_name}" does not exist')
+
+        self._destroy_audio_player()
+        self._create_audio_player(playlist_name)
+        self._set_audio_player_playback(playlist_name, pause=False)
+
+    def _create_audio_player(self, playlist_name=None, repeat=False, shuffle=False):
         """
+        Create audio player on audioplayer application. New player is always paused. Please start playback manually
+
+        Args:
+            playlist_name (str): create player based on specified playlist. If None specified, default playlist is used
+            repeat (bool): if True playlist will repeat indefinitely
+            shuffle (bool): if True playlist will be shuffled when end of it is reached
+        """
+        self.logger.debug("Create audio player playlist=%s repeat=%s shuffle=%s", playlist_name, repeat, shuffle)
         if not self.has_audioplayer:
             self.logger.warning(
                 "Audioplayer application not installed. Unable to play music"
             )
             return
 
-        if self.audioplayer_uuid:
-            self.send_command_advanced(
-                "stop_playback",
-                "audioplayer",
-                {
-                    "player_uuid": self.audioplayer_uuid,
-                },
-            )
-
-        tracks = self._get_default_playlist_tracks()
-        self.logger.debug(f"Default playlist tracks: {tracks}")
+        tracks = self._get_playlist_tracks(playlist_name) if playlist_name else self._get_default_playlist_tracks()
+        self.logger.debug("Playlist tracks: %s", tracks)
         if len(tracks) == 0:
             self.logger.warning(
                 "Unable to create player because there is no default playlist or it is empty"
@@ -337,23 +401,24 @@ class Localmusic(CleepRenderer):
 
         # create player sending first track
         track = tracks.pop(0)
-        self.audioplayer_uuid = self.send_command_advanced(
+        self.playback["playeruuid"] = self.send_command_advanced(
             "start_playback",
             "audioplayer",
             {
                 "resource": track,
                 "paused": True,
+                "repeat": repeat,
+                "shuffle": shuffle,
             },
         )
-        if not self.audioplayer_uuid:
+        if not self.playback["playeruuid"]:
             self.logger.warning(
                 "No audio player created. It won't be able to play music"
             )
             return
+        self.playback["playlistname"] = playlist_name if playlist_name else self._get_config_field("default")
 
         # fill playlist
-        if len(tracks) == 0:
-            return
         audioplayer_tracks = [
             {"resource": track, "audio_format": None} for track in tracks
         ]
@@ -361,26 +426,58 @@ class Localmusic(CleepRenderer):
             "add_tracks",
             "audioplayer",
             {
-                "player_uuid": self.audioplayer_uuid,
+                "player_uuid": self.playback["playeruuid"],
                 "tracks": audioplayer_tracks,
             },
         )
 
+    def _destroy_audio_player(self):
+        """
+        Destroy current audio player if any
+        """
+        self.logger.debug("Destroy audio player")
+        if not self.playback["playeruuid"]:
+            return
+
+        self.send_command_advanced(
+            "stop_playback",
+            "audioplayer",
+            {
+                "player_uuid": self.playback["playeruuid"],
+            }
+        )
+
     def _get_default_playlist_tracks(self):
         """
-        Returns tracks for default playlist
+        Returns tracks for default playlist or empty track list if no default playlist defined
 
         Returns:
-            list: list of default playlist path tracks, empty list if default playlist is not configured::
+            list: list of tracks::
 
-            [
-                path (str): track path
-                ...
-            ]
+                [ path1 (str), path2 (str), ... ]
 
         """
         playlist_name = self._get_config_field("default")
         if not playlist_name:
+            return []
+
+        return self._get_playlist_tracks(playlist_name)
+
+    def _get_playlist_tracks(self, playlist_name):
+        """
+        Get playlist tracks or empty list if playlist not found
+
+        Args:
+            playlist_name (str): playlist name
+
+        Returns:
+            list: list of tracks::
+
+                [ path1 (str), path2 (str), ... ]
+
+        """
+        playlists = self._get_config_field("playlists")
+        if not playlist_name in playlists:
             return []
 
         playlists = self._get_config_field("playlists")
@@ -391,26 +488,74 @@ class Localmusic(CleepRenderer):
             if playlist_filename == file_["filename"]
         ]
 
-    def _render_alarm(self, play, volume):
+    def _start_alarm(self, volume, repeat, shuffle):
         """
-        Render alarm event launching default playlist playback
+        Start alarm event launching default playlist playback
 
         Args:
-            play (bool): True to play music, otherwise pause music
             volume (int): player volume
+            repeat (bool): True to create player with playlist repeat option
+            shuffle (bool): True to create player with playlist shuffle option
         """
-        if not self.audioplayer_uuid:
-            self.logger.warning("No audio player created. Alarm event dropped")
+        self.logger.debug("Start alarm vol=%s repeat=%s shuffle=%s", volume, repeat, shuffle)
+        if not self.playback["playeruuid"]:
+            self._create_audio_player(repeat=repeat, shuffle=shuffle)
+
+        self._set_audio_player_playback(None, pause=False, volume=volume)
+
+    def _stop_alarm(self, snoozed=False):
+        """
+        Stop current alarm
+
+        Args:
+            snoozed (bool): True if snoozed was triggered and player must be paused instead of stopped
+        """
+        self.logger.debug("Stop alarm snoozed=%s", snoozed)
+        if not self.playback["playeruuid"]:
+            self.logger.warning("Unable to stop alarm for non exiting or deleted player")
+
+        if snoozed:
+            self._set_audio_player_playback(None, pause=True)
+        else:
+            self._destroy_audio_player()
+
+    def _set_audio_player_playback(self, playlist_name, pause, volume=None):
+        """
+        Start audio player playback. A player must have been created before!
+        If previous playlist name match with latest played, track will be restored
+
+        Args:
+            playlist_name (str): playlist name
+            pause (bool): True to pause playback, False to start playback
+            volume (int): if specified set volume
+        """
+        self.logger.debug("Set audio player playback playlist=%s pause=%s vol=%s", playlist_name, pause, volume)
+        if not self.playback["playeruuid"]:
+            self.logger.warning("Unable to start audio player playback because no player has been created")
             return
 
-        player_status = self.send_command_advanced(
-            "pause_playback",
-            "audioplayer",
-            {
-                "player_uuid": self.audioplayer_uuid,
-                "force_pause": not play,
-                "force_play": play,
-                "volume": volume,
-            },
-        )
-        self.logger.info(f"Alarm playback is now {player_status}")
+        self.logger.debug("playback: %s", self.playback)
+        if self.playback["playlistname"] == playlist_name and self.playback["index"] is not None:
+            self.send_command_advanced(
+                "play_track",
+                "audioplayer",
+                {
+                    "player_uuid": self.playback["playeruuid"],
+                    "track_index": self.playback["index"],
+                }
+            )
+            self.logger.info("Audio player playback is now playing track #%s", self.playback["index"])
+        else:
+            params = {
+                "player_uuid": self.playback["playeruuid"],
+                "force_pause": pause,
+                "force_play": not pause,
+            }
+            if volume is not None:
+                params["volume"] = volume
+            player_status = self.send_command_advanced(
+                "pause_playback",
+                "audioplayer",
+                params
+            )
+            self.logger.info("Audio player playback is now %s", player_status)

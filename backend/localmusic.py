@@ -23,10 +23,10 @@ class Localmusic(CleepRenderer):
     )
     MODULE_TAGS = ["music", "playlist", "local"]
     MODULE_CATEGORY = CATEGORIES.MEDIA
-    MODULE_URLINFO = "https://github.com/tangb/cleepapp-localmusic"
+    MODULE_URLINFO = "https://github.com/CleepDevice/cleepapp-localmusic"
     MODULE_URLHELP = None
     MODULE_URLSITE = None
-    MODULE_URLBUGS = "https://github.com/tangb/cleepapp-localmusic/issues"
+    MODULE_URLBUGS = "https://github.com/CleepDevice/cleepapp-localmusic/issues"
 
     MODULE_CONFIG_FILE = "localmusic.conf"
     DEFAULT_CONFIG = {
@@ -65,7 +65,7 @@ class Localmusic(CleepRenderer):
             "playlistname": None,
         }
 
-        self.playback_update_event = self._get_event('audioplayer.playback.update')
+        self.playback_update_event = self._get_event("audioplayer.playback.update")
 
     def _configure(self):
         """
@@ -107,8 +107,15 @@ class Localmusic(CleepRenderer):
             profile_name (str): rendered profile name
             profile_values (dict): renderer profile values
         """
-        if profile_name == "AlarmProfile" and profile_values["status"] == AlarmProfile.STATUS_TRIGGERED:
-            self._start_alarm(profile_values["volume"], profile_values["repeat"], profile_values["shuffle"])
+        if (
+            profile_name == "AlarmProfile"
+            and profile_values["status"] == AlarmProfile.STATUS_TRIGGERED
+        ):
+            self._start_alarm(
+                profile_values["volume"],
+                profile_values["repeat"],
+                profile_values["shuffle"],
+            )
 
         if profile_name == "AlarmProfile" and profile_values["status"] in [
             AlarmProfile.STATUS_STOPPED,
@@ -385,14 +392,23 @@ class Localmusic(CleepRenderer):
             repeat (bool): if True playlist will repeat indefinitely
             shuffle (bool): if True playlist will be shuffled when end of it is reached
         """
-        self.logger.debug("Create audio player playlist=%s repeat=%s shuffle=%s", playlist_name, repeat, shuffle)
+        self.logger.debug(
+            "Create audio player playlist=%s repeat=%s shuffle=%s",
+            playlist_name,
+            repeat,
+            shuffle,
+        )
         if not self.has_audioplayer:
             self.logger.warning(
                 "Audioplayer application not installed. Unable to play music"
             )
             return
 
-        tracks = self._get_playlist_tracks(playlist_name) if playlist_name else self._get_default_playlist_tracks()
+        tracks = (
+            self._get_playlist_tracks(playlist_name)
+            if playlist_name
+            else self._get_default_playlist_tracks()
+        )
         self.logger.debug("Playlist tracks: %s", tracks)
         if len(tracks) == 0:
             self.logger.warning(
@@ -426,7 +442,9 @@ class Localmusic(CleepRenderer):
                 "No audio player created. It won't be able to play music"
             )
             return
-        self.playback["playlistname"] = playlist_name if playlist_name else self._get_config_field("default")
+        self.playback["playlistname"] = (
+            playlist_name if playlist_name else self._get_config_field("default")
+        )
 
         # fill playlist
         audioplayer_tracks = [
@@ -454,7 +472,7 @@ class Localmusic(CleepRenderer):
             "audioplayer",
             {
                 "player_uuid": self.playback["playeruuid"],
-            }
+            },
         )
 
     def _get_default_playlist_tracks(self):
@@ -507,7 +525,9 @@ class Localmusic(CleepRenderer):
             repeat (bool): True to create player with playlist repeat option
             shuffle (bool): True to create player with playlist shuffle option
         """
-        self.logger.debug("Start alarm vol=%s repeat=%s shuffle=%s", volume, repeat, shuffle)
+        self.logger.debug(
+            "Start alarm vol=%s repeat=%s shuffle=%s", volume, repeat, shuffle
+        )
         if not self.playback["playeruuid"]:
             self._create_audio_player(repeat=repeat, shuffle=shuffle)
 
@@ -522,7 +542,9 @@ class Localmusic(CleepRenderer):
         """
         self.logger.debug("Stop alarm snoozed=%s", snoozed)
         if not self.playback["playeruuid"]:
-            self.logger.warning("Unable to stop alarm for non exiting or deleted player")
+            self.logger.warning(
+                "Unable to stop alarm for non exiting or deleted player"
+            )
             return
 
         if snoozed:
@@ -541,7 +563,9 @@ class Localmusic(CleepRenderer):
         """
         self.logger.debug("Change audio player status pause=%s vol=%s", pause, volume)
         if not self.playback["playeruuid"]:
-            self.logger.warning("Unable to change audio player status because no player has been created")
+            self.logger.warning(
+                "Unable to change audio player status because no player has been created"
+            )
             return
 
         self.logger.debug("playback: %s", self.playback)
@@ -553,8 +577,6 @@ class Localmusic(CleepRenderer):
         if volume is not None:
             params["volume"] = volume
         player_status = self.send_command_advanced(
-            "pause_playback",
-            "audioplayer",
-            params
+            "pause_playback", "audioplayer", params
         )
         self.logger.info("Audio player playback is now %s", player_status)

@@ -1,6 +1,6 @@
 # Local music
 
-![alt text](https://github.com/tangb/cleepapp-localmusic/raw/master/resources/background.jpg)
+![alt text](https://github.com/CleepDevice/cleepapp-localmusic/raw/master/resources/background.jpg)
 
 This application allows you to add music files to your device and to create music playlist.
 

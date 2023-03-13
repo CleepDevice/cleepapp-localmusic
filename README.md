@@ -1,4 +1,4 @@
-# Local music
+# Local music [![Coverage Status](https://coveralls.io/repos/github/CleepDevice/cleepapp-localmusic/badge.svg)](https://coveralls.io/github/CleepDevice/cleepapp-localmusic)
 
 ![alt text](https://github.com/CleepDevice/cleepapp-localmusic/raw/master/resources/background.jpg)
 

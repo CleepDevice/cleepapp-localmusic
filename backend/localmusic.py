@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import os
-from cleep.exception import MissingParameter, InvalidParameter, CommandError
+from cleep.exception import InvalidParameter, CommandError
 from cleep.core import CleepRenderer
 from cleep.common import CATEGORIES, RENDERERS
 from cleep.profiles.alarmprofile import AlarmProfile

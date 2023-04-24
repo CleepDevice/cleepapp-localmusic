@@ -265,10 +265,16 @@ class Localmusic(CleepRenderer):
 
         Args:
             playlist_name (str): playlist name
-            files (list): list of files to add into playlist
+            files (list): list of files to add into playlist::
+
+                [
+                    filename1 (str),
+                    filenale2 (str),
+                    ...
+                ]
 
         Raises:
-            InvalidParameter
+            InvalidParameter: if playlist already exist
         """
         self._check_parameters(
             [
@@ -303,10 +309,16 @@ class Localmusic(CleepRenderer):
         Args:
             playlist_name (str): playlist name
             new_playlist_name (str): new playlist name
-            files (list): list of files to add into playlist
+            files (list): list of files to add into playlist::
+
+                [
+                    filename1 (str),
+                    filename2 (str),
+                    ...
+                ]
 
         Raises:
-            InvalidParameter
+            InvalidParameter: if playlist does not exist
         """
         self._check_parameters(
             [
@@ -360,7 +372,7 @@ class Localmusic(CleepRenderer):
             playlist_name (str): playlist name to rename
 
         Raises:
-            InvalidParameter
+            InvalidParameter: if playlist name does not exist
         """
         playlists = self._get_config_field("playlists")
         if playlist_name not in playlists:

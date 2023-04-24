@@ -1,5 +1,9 @@
 # Changelog
 
+## [UNRELEASED]
+### Fixed
+- Fix documentation
+
 ## [1.1.0] - 2023-03-13
 ### Changed
 - Update storage path according to core changes

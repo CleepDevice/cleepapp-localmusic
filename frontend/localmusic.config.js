@@ -12,6 +12,7 @@ function($rootScope, cleepService, toastService, localmusicService, $mdDialog) {
         var self = this;
         self.config = {};
         self.tabIndex = 'playlists';
+        self.playlists = [];
         self.hasPlaylists = false;
         self.uploadFile = null;
         self.files = [];
@@ -29,9 +30,21 @@ function($rootScope, cleepService, toastService, localmusicService, $mdDialog) {
         self.getMusicFiles = function() {
             localmusicService.getMusicFiles()
                 .then(resp => {
-                    cleepService.syncVar(self.files, resp.data);
-                    self.files.sort(self._sortFiles);
+                    self.setFiles(resp.data);
                 });
+        };
+
+        self.setFiles = function (files) {
+            self.files = [];
+            for (const file of files.sort(self._sortFiles)) {
+                self.files.push({
+                    title: file.filename,
+                    icon: 'music-circle-outline',
+                    clicks: [
+                        { icon: 'delete', style: 'md-accent', tooltip: 'Delete file', click: self.deleteMusicFile, meta: { filename: file.filename }},
+                    ],
+                });
+            }
         };
 
         self.deleteMusicFile = function(filename) {
@@ -42,7 +55,22 @@ function($rootScope, cleepService, toastService, localmusicService, $mdDialog) {
                 });
         };
 
-        self.playlistDialog = function(playlistName, playlistTracks) {
+        self.addMusicFile = function (file) {
+            if (!file) {
+                return;
+            }
+                
+            toastService.loading('Adding music file...');
+            localmusicService.addMusicFile(file)
+                .then((resp) => {
+                    if (resp.data) {
+                        toastService.success('Music file added');
+                        self.getMusicFiles();
+                    }
+                });
+        };
+
+        self.openPlaylistDialog = function(playlistName, playlistTracks) {
             self.availableFiles = self.files.slice();
             if (angular.isUndefined(playlistName)) {
                 self.playlistName = '';
@@ -51,9 +79,9 @@ function($rootScope, cleepService, toastService, localmusicService, $mdDialog) {
             } else {
                 self.playlistName = self.oldPlaylistName = playlistName;
                 self.playlistTracks = self.files.filter(file => {
-                    var exists = Boolean(playlistTracks.find(track => track === file.filename))
+                    var exists = Boolean(playlistTracks.find(track => track === file.title))
                     if (exists) {
-                        var index = self.availableFiles.findIndex(availableFile => availableFile.filename === file.filename);
+                        var index = self.availableFiles.findIndex(availableFile => availableFile.title === file.title);
                         if (index >= 0) self.availableFiles.splice(index, 1);
                     }
                     return exists;
@@ -63,7 +91,7 @@ function($rootScope, cleepService, toastService, localmusicService, $mdDialog) {
 
             return $mdDialog.show({
                 controller: function() { return self; },
-                controllerAs: 'localmusicCtl',
+                controllerAs: '$ctrl',
                 templateUrl: 'playlist.dialog.html',
                 parent: angular.element(document.body),
                 clickOutsideToClose: false,
@@ -83,16 +111,36 @@ function($rootScope, cleepService, toastService, localmusicService, $mdDialog) {
 
         self.moveRight = function(file) {
             self.playlistTracks.push(file);
-            self.availableFiles.splice(self.availableFiles.indexOf(file), 1);
-            // self.playlistTracks.sort(self._sortFiles);
+            const fileIndex = self.availableFiles.findIndex((item) => item.title === file.title);
+            self.availableFiles.splice(fileIndex, 1);
             self.availableFiles.sort(self._sortFiles);
         };
 
         self.moveLeft = function(track) {
             self.availableFiles.push(track);
-            self.playlistTracks.splice(self.playlistTracks.indexOf(track), 1);
-            // self.playlistTracks.sort(self._sortFiles);
+            const trackIndex = self.playlistTracks.findIndex((item) => item.title === track.title);
+            self.playlistTracks.splice(trackIndex, 1);
             self.availableFiles.sort(self._sortFiles);
+        };
+
+        self.moveUp = function(track) {
+            const trackIndex = self.playlistTracks.findIndex((item) => item.title === track.title);
+            if (trackIndex === 0) {
+                return;
+            }
+
+            const trackElement = self.playlistTracks.splice(trackIndex, 1);
+            self.playlistTracks.splice(trackIndex-1, 0, trackElement[0]);
+        };
+
+        self.moveDown = function(track) {
+            const trackIndex = self.playlistTracks.findIndex((item) => item.title === track.title);
+            if (trackIndex === self.playlistTracks.length-1) {
+                return;
+            }
+
+            const trackElement = self.playlistTracks.splice(trackIndex, 1);
+            self.playlistTracks.splice(trackIndex+1, 0, trackElement[0]);
         };
 
         self.addPlaylist = function() {
@@ -101,8 +149,7 @@ function($rootScope, cleepService, toastService, localmusicService, $mdDialog) {
                 return;
             }
 
-            var playlistTracks = self.playlistTracks.map((track) => track.filename);
-
+            const playlistTracks = self.playlistTracks.map((track) => track.title);
             localmusicService.addPlaylist(self.playlistName, playlistTracks)
                 .then((resp) => {
                     if (!resp.error) {
@@ -128,8 +175,7 @@ function($rootScope, cleepService, toastService, localmusicService, $mdDialog) {
                 return;
             }
 
-            var playlistTracks = self.playlistTracks.map((track) => track.filename);
-
+            const playlistTracks = self.playlistTracks.map((track) => track.title);
             localmusicService.updatePlaylist(self.oldPlaylistName, self.playlistName, playlistTracks)
                 .then((resp) => {
                     if (!resp.error) {
@@ -158,29 +204,37 @@ function($rootScope, cleepService, toastService, localmusicService, $mdDialog) {
                 });
         };
 
-        $scope.$watch(function() {
-            return self.uploadFile;
-        }, function(file) {
-            if (file) {
-                localmusicService.addMusicFile(file)
-                .then((resp) => {
-                    if (resp.data) {
-                        toastService.success('Music file added');
-                        self.getMusicFiles();
-                    }
+        self.setPlaylists = function(playlists, defaultPlaylist) {
+            self.playlists = [];
+            for (const [playlistName, playlistTracks] of Object.entries(playlists)) {
+                const icon = playlistName === defaultPlaylist ? 'playlist-star' : 'playlist-music-outline';
+                const style = playlistName === defaultPlaylist ? 'md-accent' : '';
+                const defaultSubtitle = playlistName === defaultPlaylist ? 'Default playlist - ' : '';
+                self.playlists.push({
+                    icon,
+                    style,
+                    title: playlistName,
+                    subtitle: defaultSubtitle + playlistTracks.length + ' tracks',
+                    clicks: [
+                        { icon: 'play', tooltip: 'Play tracks', click: self.playPlaylist, meta: { playlistName } },
+                        { icon: 'playlist-edit', tooltip: 'Edit playlist', click: self.openPlaylistDialog, meta: { playlistName, playlistTracks } },
+                        { icon: 'playlist-star', tooltip: 'Set playlist as default', click: self.setDefaultPlaylist, meta: { playlistName } },
+                        { icon: 'delete', tooltip: 'Delete playlist', style: 'md-accent', click: self.deletePlaylist, meta: { playlistName } },
+                    ],
                 });
             }
-        });
+        };
 
-        $rootScope.$watch(function() {
-            return cleepService.modules['localmusic'].config;
-        }, function(newVal, oldVal) {
-            if(newVal && Object.keys(newVal).length) {
-                Object.assign(self.config, newVal);
-                self.hasPlaylists = Object.keys(self.config.playlists).length > 0;
-            }
-        });
-
+        $rootScope.$watchCollection(
+            () => cleepService.modules['localmusic'].config,
+            (config) => {
+                if (config && Object.keys(config).length) {
+                    self.setPlaylists(config.playlists, config.default);
+                    Object.assign(self.config, config);
+                    self.hasPlaylists = self.playlists.length > 0;
+                }
+            },
+        );
     };
 
     return {
@@ -188,6 +242,6 @@ function($rootScope, cleepService, toastService, localmusicService, $mdDialog) {
         replace: true,
         scope: true,
         controller: localmusicConfigController,
-        controllerAs: 'localmusicCtl',
+        controllerAs: '$ctrl',
     };
 }]);

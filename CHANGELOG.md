@@ -4,6 +4,9 @@
 ### Fixed
 - Fix documentation
 
+### Updated
+- Migrate to Cleep components
+
 ## [1.1.0] - 2023-03-13
 ### Changed
 - Update storage path according to core changes

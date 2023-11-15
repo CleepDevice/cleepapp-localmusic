@@ -4,63 +4,58 @@
             <div class="md-toolbar-tools">
                 <h2>Playlist</h2>
                 <span flex></span>
-                <md-button class="md-icon-button" ng-click="localmusicCtl.cancelDialog()" aria-label="Close dialog">
-                    <md-icon md-svg-icon="close"></md-icon>
+                <md-button class="cl-icon-button" ng-click="$ctrl.cancelDialog()" aria-label="Close dialog">
+                    <cl-icon cl-mdi="close"></cl-icon>
                 </md-button>
             </div>
         </md-toolbar>
 
         <md-dialog-content class="md-dialog-content dialog-content" layout="column" layout-align="start stretch">
-            <div>
-                <md-list>
-                    <md-list-item>
-                        <md-icon md-svg-icon="chevron-right"></md-icon>
-                        <p>Playlist name</p>
-                        <md-input-container class="md-secondary no-margin no-error-spacer">
-                            <input type="text" ng-model="localmusicCtl.playlistName">
-                        </md-input-container>
-                    </md-list-item>
-                </md-list>
-                <md-list>
-                    <md-list-item>
-                        <md-icon md-svg-icon="chevron-right"></md-icon>
-                        <p>Playlist tracks</p>
-                    </md-list-item>
-                </md-list>
-            </div>
+            <config-text
+                cl-title="Playlist name" cl-model="$ctrl.playlistName"
+            ></config-text>
+            <config-comment
+                cl-title="Playlist tracks" cl-subtitle="Compose your playlist picking on available files"
+            ></config-comment>
             <div layout="row" layout-align="center stretch">
-                <md-list class="track-list md-whiteframe-4dp">
+                <md-list class="track-list" flex="50" style="border-right: 1px solid lightgray;">
                     <md-subheader class="list-subheader">
-                        <p>Availables files</p>
+                        <p>Available files</p>
                     </md-subheader>
-                    <md-list-item ng-repeat="file in localmusicCtl.availableFiles" ng-click="localmusicCtl.moveRight(file)">
-                        <p>{{file.filename}}</p>
-                        <md-button class="md-primary md-icon-button" ng-click="localmusicCtl.moveRight(file)">
-                            <md-icon md-svg-icon="arrow-right-bold"></md-icon>
+                    <md-list-item ng-repeat="file in $ctrl.availableFiles" ng-click="$ctrl.moveRight(file)">
+                        <p>{{ file.title }}</p>
+                        <md-button class="md-primary cl-button-sm" ng-click="$ctrl.moveRight(file)">
+                            <cl-icon cl-mdi="arrow-right-bold"></cl-icon>
                         </md-button>
                     </md-list-item>
                 </md-list>
-                <md-list class="track-list md-whiteframe-4dp">
+                <md-list class="track-list" flex="50">
                     <md-subheader class="list-subheader">
                         <p>Playlist files</p>
                     </md-subheader>
-                    <md-list-item ng-repeat="track in localmusicCtl.playlistTracks" ng-click="localmusicCtl.moveLeft(track)">
-                        <md-button class="md-primary md-icon-button" ng-click="localmusicCtl.moveLeft(track)">
-                            <md-icon md-svg-icon="arrow-left-bold"></md-icon>
+                    <md-list-item ng-repeat="track in $ctrl.playlistTracks" ng-click="$ctrl.moveLeft(track)">
+                        <md-button class="md-primary cl-button-sm" ng-click="$ctrl.moveLeft(track)">
+                            <cl-icon cl-mdi="arrow-left-bold"></cl-icon>
                         </md-button>
-                        <p>{{track.filename}}</p>
+                        <p>{{ track.title }}</p>
+                        <md-button class="md-primary cl-button-sm" ng-disabled="$last" ng-click="$ctrl.moveDown(track)">
+                            <cl-icon cl-mdi="arrow-down-bold"></cl-icon>
+                        </md-button>
+                        <md-button class="md-primary cl-button-sm" ng-disabled="$first" ng-click="$ctrl.moveUp(track)">
+                            <cl-icon cl-mdi="arrow-up-bold"></cl-icon>
+                        </md-button>
                     </md-list-item>
                 </md-list>
             </div>
         </md-dialog-content>
 
         <md-dialog-actions layout="row">
-            <md-button ng-click="localmusicCtl.addPlaylist()" ng-if="!localmusicCtl.playlistUpdate">
-                <md-icon md-svg-icon="content-save"></md-icon>
+            <md-button ng-click="$ctrl.addPlaylist()" ng-if="!$ctrl.playlistUpdate">
+                <cl-icon cl-mdi="content-save"></cl-icon>
                 Create playlist
             </md-button>
-            <md-button ng-click="localmusicCtl.updatePlaylist()" ng-if="localmusicCtl.playlistUpdate">
-                <md-icon md-svg-icon="content-save"></md-icon>
+            <md-button ng-click="$ctrl.updatePlaylist()" ng-if="$ctrl.playlistUpdate">
+                <cl-icon cl-mdi="content-save"></cl-icon>
                 Update playlist
             </md-button>
         </md-dialog-actions>

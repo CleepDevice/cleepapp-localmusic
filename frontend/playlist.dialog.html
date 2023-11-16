@@ -5,7 +5,7 @@
                 <h2>Playlist</h2>
                 <span flex></span>
                 <md-button class="cl-icon-button" ng-click="$ctrl.cancelDialog()" aria-label="Close dialog">
-                    <cl-icon cl-mdi="close"></cl-icon>
+                    <cl-icon cl-icon="close"></cl-icon>
                 </md-button>
             </div>
         </md-toolbar>
@@ -25,7 +25,7 @@
                     <md-list-item ng-repeat="file in $ctrl.availableFiles" ng-click="$ctrl.moveRight(file)">
                         <p>{{ file.title }}</p>
                         <md-button class="md-primary cl-button-sm" ng-click="$ctrl.moveRight(file)">
-                            <cl-icon cl-mdi="arrow-right-bold"></cl-icon>
+                            <cl-icon cl-icon="arrow-right-bold"></cl-icon>
                         </md-button>
                     </md-list-item>
                 </md-list>
@@ -35,14 +35,14 @@
                     </md-subheader>
                     <md-list-item ng-repeat="track in $ctrl.playlistTracks" ng-click="$ctrl.moveLeft(track)">
                         <md-button class="md-primary cl-button-sm" ng-click="$ctrl.moveLeft(track)">
-                            <cl-icon cl-mdi="arrow-left-bold"></cl-icon>
+                            <cl-icon cl-icon="arrow-left-bold"></cl-icon>
                         </md-button>
                         <p>{{ track.title }}</p>
                         <md-button class="md-primary cl-button-sm" ng-disabled="$last" ng-click="$ctrl.moveDown(track)">
-                            <cl-icon cl-mdi="arrow-down-bold"></cl-icon>
+                            <cl-icon cl-icon="arrow-down-bold"></cl-icon>
                         </md-button>
                         <md-button class="md-primary cl-button-sm" ng-disabled="$first" ng-click="$ctrl.moveUp(track)">
-                            <cl-icon cl-mdi="arrow-up-bold"></cl-icon>
+                            <cl-icon cl-icon="arrow-up-bold"></cl-icon>
                         </md-button>
                     </md-list-item>
                 </md-list>
@@ -51,11 +51,11 @@
 
         <md-dialog-actions layout="row">
             <md-button ng-click="$ctrl.addPlaylist()" ng-if="!$ctrl.playlistUpdate">
-                <cl-icon cl-mdi="content-save"></cl-icon>
+                <cl-icon cl-icon="content-save"></cl-icon>
                 Create playlist
             </md-button>
             <md-button ng-click="$ctrl.updatePlaylist()" ng-if="$ctrl.playlistUpdate">
-                <cl-icon cl-mdi="content-save"></cl-icon>
+                <cl-icon cl-icon="content-save"></cl-icon>
                 Update playlist
             </md-button>
         </md-dialog-actions>

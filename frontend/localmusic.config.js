@@ -78,13 +78,12 @@ function($rootScope, cleepService, toastService, localmusicService, $mdDialog) {
                 self.playlistUpdate = false;
             } else {
                 self.playlistName = self.oldPlaylistName = playlistName;
-                self.playlistTracks = self.files.filter(file => {
-                    var exists = Boolean(playlistTracks.find(track => track === file.title))
-                    if (exists) {
-                        var index = self.availableFiles.findIndex(availableFile => availableFile.title === file.title);
-                        if (index >= 0) self.availableFiles.splice(index, 1);
+                self.playlistTracks = playlistTracks.map(track => {
+                    const fileIndex = self.availableFiles.findIndex(file => track === file.title);
+                    if (fileIndex >= 0) {
+                        return self.availableFiles.splice(fileIndex, 1)[0];
                     }
-                    return exists;
+                    return undefined;
                 });
                 self.playlistUpdate = true;
             }

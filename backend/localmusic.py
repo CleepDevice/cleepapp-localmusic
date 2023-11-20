@@ -347,6 +347,10 @@ class Localmusic(CleepRenderer):
         self._check_playlists(playlists)
         self._set_config_field("playlists", playlists)
 
+        default_playlist = self._get_config_field("default")
+        if playlist_name == default_playlist:
+            self.set_default_playlist(new_playlist_name)
+
     def delete_playlist(self, playlist_name):
         """
         Delete playlist

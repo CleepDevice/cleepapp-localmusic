@@ -3,9 +3,11 @@
 ## [UNRELEASED]
 ### Fixed
 - Fix documentation
+- Fix default playlist when playlist renamed
 
 ### Updated
 - Migrate to Cleep components
+- Add ways to move tracks in playlist
 
 ## [1.1.0] - 2023-03-13
 ### Changed

@@ -1,6 +1,6 @@
 # Changelog
 
-## [UNRELEASED]
+## [1.2.0] - 2024-10-15
 ### Fixed
 - Fix documentation
 - Fix default playlist when playlist renamed

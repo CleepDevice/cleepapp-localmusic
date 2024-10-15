@@ -14,7 +14,7 @@ class Localmusic(CleepRenderer):
     """
 
     MODULE_AUTHOR = "Cleep"
-    MODULE_VERSION = "1.1.0"
+    MODULE_VERSION = "1.2.0"
     MODULE_LABEL = "Local music"
     MODULE_DEPS = ["audioplayer"]
     MODULE_DESCRIPTION = "Create your music playlist with device files"

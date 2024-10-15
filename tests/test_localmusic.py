@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+from cleep.libs.tests import session
 import unittest
 import logging
 import sys
@@ -12,8 +13,7 @@ from cleep.exception import (
     CommandError,
     Unauthorized,
 )
-from cleep.libs.tests import session
-from mock import Mock, patch
+from unittest.mock import Mock, patch
 from copy import deepcopy
 from cleep.libs.tests.common import get_log_level
 
@@ -41,12 +41,12 @@ class TestLocalmusic(unittest.TestCase):
         # clean session
         self.session.clean()
 
-    def init(self, start=True):
+    def init(self, start=True, mock_on_start=True):
         """
         Call this function at beginning of every test cases. By default it starts your app, but if you specify start=False,
         the application must be started manually which is useful in some cases like testing _on_configure app function.
         """
-        self.module = self.session.setup(Localmusic)
+        self.module = self.session.setup(Localmusic, mock_on_start=mock_on_start)
 
         cmd = self.session.make_mock_command("is_module_loaded", True)
         self.session.add_mock_command(cmd)
@@ -65,7 +65,7 @@ class TestLocalmusic(unittest.TestCase):
         self.module._check_playlists.assert_called()
 
     def test__on_start(self):
-        self.init(False)
+        self.init(False, False)
         self.module.is_module_loaded = Mock()
 
         self.session.start_module(self.module)
